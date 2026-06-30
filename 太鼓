@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>1A2B Game</title>
+    <title>index.html</title>
     <style>
         body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
         .input-group { margin: 20px 0; }
