@@ -6,26 +6,29 @@
     <title>1A2B 遊戲中心</title>
     <style>
         body { background-color: #121212; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
-        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; display: inline-block; width: 300px; margin-top: 20px; }
-        input { display: block; margin: 10px auto; padding: 10px; width: 80%; border-radius: 5px; border: 1px solid #333; background: #121212; color: #fff; text-align: center; font-size: 1.1rem; }
-        button { padding: 10px 20px; cursor: pointer; background: #29b6f6; border: none; border-radius: 5px; font-weight: bold; margin: 5px; color: #000; }
-        #game-area { display: none; }
-        .log-item { border-bottom: 1px solid #333; padding: 5px; display: flex; justify-content: space-between; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; display: inline-block; width: 300px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        input { display: block; margin: 15px auto; padding: 12px; width: 80%; border-radius: 6px; border: 1px solid #333; background: #121212; color: #fff; text-align: center; font-size: 1.2rem; }
+        button { padding: 12px 24px; cursor: pointer; background: #29b6f6; border: none; border-radius: 6px; font-weight: bold; margin: 5px; color: #000; font-size: 1rem; }
+        .log-item { border-bottom: 1px solid #333; padding: 8px; display: flex; justify-content: space-between; font-size: 1.1rem; }
+        #auth-area { margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-    <h1>1A2B 猜數字</h1>
-    <p id="status">請使用 Google 帳號登入</p>
-    <button id="loginBtn">使用 Google 登入</button>
+    <h1>1A2B 猜數字遊戲</h1>
+    
+    <div id="auth-area">
+        <span id="status" style="color: #aaa; margin-right: 10px;">載入中...</span>
+        <button id="loginBtn" style="padding: 5px 10px; font-size: 0.8rem; display: none;">綁定 Google 帳號</button>
+    </div>
 
     <div id="game-area">
         <div class="box">
             <input type="text" id="userGuess" maxlength="4" placeholder="輸入4位不重複數字">
             <button id="guessBtn">猜測</button>
             <button id="restartBtn" style="background:#ef5350; color:#fff;">重來</button>
-            <div id="hintMessage" style="margin-top:10px; color:#ffb74d;"></div>
-            <div id="historyLogs" style="margin-top:10px;"></div>
+            <div id="hintMessage" style="margin-top:15px; color:#ffb74d; font-weight: bold;"></div>
+            <div id="historyLogs" style="margin-top:15px;"></div>
         </div>
     </div>
 
@@ -48,31 +51,34 @@
 
         let answer = '';
 
-        // 登入功能
+        // --- 帳號狀態控制 ---
+        onAuthStateChanged(auth, (user) => {
+            const statusText = document.getElementById('status');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (user) {
+                statusText.innerText = `玩家：${user.displayName || '已登入'}`;
+                loginBtn.style.display = 'none';
+            } else {
+                statusText.innerText = "目前為單機模式";
+                loginBtn.style.display = 'inline-block';
+            }
+        });
+
+        // 綁定 Google 登入按鈕
         document.getElementById('loginBtn').onclick = () => {
             signInWithPopup(auth, provider).catch(err => alert("登入失敗: " + err.message));
         };
 
-        // 監聽登入狀態
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('status').innerText = `歡迎回來，${user.displayName || '玩家'}`;
-                document.getElementById('loginBtn').style.display = 'none';
-                document.getElementById('game-area').style.display = 'block';
-                restartGame(); // 登入成功後初始化遊戲
-            }
-        });
-
-        // 遊戲功能：重來
+        // --- 1A2B 遊戲核心邏輯 ---
         function restartGame() {
             let nums = ['0','1','2','3','4','5','6','7','8','9'].sort(() => 0.5 - Math.random());
             answer = nums.slice(0, 4).join('');
             document.getElementById('historyLogs').innerHTML = '';
-            document.getElementById('hintMessage').innerText = '新遊戲開始，請輸入4位數字';
+            document.getElementById('hintMessage').innerText = '新遊戲開始，請輸入4位數字！';
             document.getElementById('userGuess').value = '';
         }
 
-        // 遊戲功能：猜測
         function checkGuess() {
             let g = document.getElementById('userGuess').value;
             if (!/^\d{4}$/.test(g) || new Set(g).size !== 4) return alert('請輸入4位不重複數字');
@@ -92,9 +98,12 @@
             document.getElementById('userGuess').value = '';
         }
 
-        // 用事件監聽器綁定按鈕，解決 type="module" 找不到函數的問題
+        // 💡 關鍵修正：用事件監聽器綁定，按鈕絕對有反應
         document.getElementById('guessBtn').addEventListener('click', checkGuess);
         document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+        // 啟動遊戲
+        restartGame();
     </script>
 </body>
 </html>
